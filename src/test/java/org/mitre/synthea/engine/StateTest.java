@@ -193,8 +193,6 @@ public class StateTest {
         module.name, conditionDisplay
     );
     assertTrue(onsetTime != null);
-    // Ensure that it ignores the blank assign_to_attribute
-    assertNull(person.attributes.get(""));
     assertEquals(time, onsetTime.longValue());
   }
 
@@ -254,7 +252,6 @@ public class StateTest {
         module.name, code.display
     );
     assertTrue(onsetTime != null);
-    assertNotNull(person.attributes.get("Most Recent ED Visit"));
     assertEquals(time, onsetTime.longValue());
   }
 

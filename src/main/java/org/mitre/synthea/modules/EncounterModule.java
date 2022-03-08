@@ -71,13 +71,19 @@ public final class EncounterModule extends Module {
       Code code = getWellnessVisitCode(person, time);
       encounter = createEncounter(person, time, EncounterType.WELLNESS,
           ClinicianSpecialty.GENERAL_PRACTICE, code);
+      System.out.println(" Coding code -------------------> " +  code);
       encounter.name = "Encounter Module Scheduled Wellness";
+
+      //Added [Sourav]
+      encounter.clinicalNote = "ClinicalNote";
+   
+     
       person.attributes.put(ACTIVE_WELLNESS_ENCOUNTER, true);
       startedEncounter = true;
     } else if (person.symptomTotal() > EMERGENCY_SYMPTOM_THRESHOLD) {
       if (!person.attributes.containsKey(LAST_VISIT_SYMPTOM_TOTAL)) {
         person.attributes.put(LAST_VISIT_SYMPTOM_TOTAL, 0);
-      }
+      } 
       if (person.symptomTotal() != (int)person.attributes.get(LAST_VISIT_SYMPTOM_TOTAL)) {
         person.attributes.put(LAST_VISIT_SYMPTOM_TOTAL, person.symptomTotal());
         person.addressLargestSymptom();
@@ -140,6 +146,7 @@ public final class EncounterModule extends Module {
     int year = Utilities.getYear(time);
     // create the encounter
     Encounter encounter = person.encounterStart(time, type);
+    //encounter.clinicalNote
     if (code != null) {
       encounter.codes.add(code);
     }
@@ -149,7 +156,13 @@ public final class EncounterModule extends Module {
     encounter.provider = prov;
     // assign a clinician
     encounter.clinician = prov.chooseClinicianList(specialty, person);
+    //encounter.
+
+    //[Sourav]
+    encounter.clinicalNote = "Added Clinical Note";
+    System.out.println("=================" + encounter);
     return encounter;
+
   }
 
   /**

@@ -10,13 +10,7 @@ import com.google.gson.JsonObject;
 
 import java.awt.geom.Point2D;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.hl7.fhir.r4.model.Address;
@@ -725,6 +719,7 @@ public class FhirR4 {
       encounterResource.addReasonCode().addCoding().setCode(encounter.reason.code)
           .setDisplay(encounter.reason.display).setSystem(SNOMED_URI);
     }
+    
 
     Provider provider = encounter.provider;
     if (provider == null) {
@@ -794,6 +789,11 @@ public class FhirR4 {
           .setSystem(SYNTHEA_IDENTIFIER)
           .setValue(encounterResource.getId());
     }
+    
+    // Adding additional attributes[Sourav] that can come via the changes made
+    // to the Modules.
+   
+    encounterResource.addBasedOn(new Reference(encounter.clinicalNote));
     return entry;
   }
 
@@ -1060,7 +1060,22 @@ public class FhirR4 {
    * @param person the person the health record belongs to
    * @param encounter the current Encounter as an object
    * @return the added entry
-   */
+   */    public List<Observation> observations;
+  public List<Report> reports;
+  public List<HealthRecord.Entry> conditions;
+  public List<HealthRecord.Allergy> allergies;
+  public List<Procedure> procedures;
+  public List<HealthRecord.Immunization> immunizations;
+  public List<Medication> medications;
+  public List<CarePlan> careplans;
+  public List<ImagingStudy> imagingStudies;
+  public List<HealthRecord.Device> devices;
+  public List<HealthRecord.Supply> supplies;
+  public Claim claim; // for now assume 1 claim per encounter
+  public Code reason;
+  public Code discharge;
+  public Provider provider;
+  public Clinician clinician;
   private static BundleEntryComponent explanationOfBenefit(BundleEntryComponent personEntry,
                                            Bundle bundle, BundleEntryComponent encounterEntry,
                                            Person person, BundleEntryComponent claimEntry,
@@ -1546,6 +1561,9 @@ public class FhirR4 {
 
     observationResource.setSubject(new Reference(personEntry.getFullUrl()));
     observationResource.setEncounter(new Reference(encounterEntry.getFullUrl()));
+
+    // Added new attribute[Sourav]
+    observationResource.setBasedOn(Arrays.asList(new Reference("BasedOnAddedForData")));
 
     observationResource.setStatus(ObservationStatus.FINAL);
 
@@ -2322,6 +2340,7 @@ public class FhirR4 {
           Provider provider, BundleEntryComponent careTeamEntry, CarePlan carePlan) {
     org.hl7.fhir.r4.model.CarePlan careplanResource = new org.hl7.fhir.r4.model.CarePlan();
 
+
     if (USE_US_CORE_IG) {
       Meta meta = new Meta();
       meta.addProfile(
@@ -2338,6 +2357,8 @@ public class FhirR4 {
     careplanResource.setEncounter(new Reference(encounterEntry.getFullUrl()));
     careplanResource.addCareTeam(new Reference(careTeamEntry.getFullUrl()));
 
+
+
     Code code = carePlan.codes.get(0);
     careplanResource.addCategory(mapCodeToCodeableConcept(code, SNOMED_URI));
     narrative += code.display + ".";
@@ -2351,6 +2372,7 @@ public class FhirR4 {
     careplanResource.setPeriod(period);
     if (carePlan.stop != 0L) {
       period.setEnd(new Date(carePlan.stop));
+
       careplanResource.setStatus(CarePlanStatus.COMPLETED);
       activityStatus = CarePlanActivityStatus.COMPLETED;
       goalStatus.getCodingFirstRep().setCode("achieved");
@@ -2408,6 +2430,7 @@ public class FhirR4 {
     careplanResource.setText(new Narrative().setStatus(NarrativeStatus.GENERATED)
         .setDiv(new XhtmlNode(NodeType.Element).setValue(narrative)));
 
+
     return newEntry(rand, bundle, careplanResource);
   }
 
@@ -2455,9 +2478,7 @@ public class FhirR4 {
       descriptionCodeableConcept.setText(code.get("display").getAsString());
       goalResource.setDescription(descriptionCodeableConcept);
     } else if (goal.has("observation")) {
-      CodeableConcept descriptionCodeableConcept = new CodeableConcept();
-
-      // build up our own text from the observation condition, similar to the graphviz logic
+      CodeableConcept descriptionCodeableConcept = new CodeableConcept(); // build up our own text from the observation condition, similar to the graphviz logic
       JsonObject logic = goal.get("observation").getAsJsonObject();
 
       String[] text = {

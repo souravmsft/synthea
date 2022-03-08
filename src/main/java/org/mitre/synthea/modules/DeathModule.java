@@ -37,6 +37,7 @@ public class DeathModule {
       Encounter encounter = EncounterModule.createEncounter(person, time, EncounterType.WELLNESS,
           ClinicianSpecialty.GENERAL_PRACTICE, DEATH_CERTIFICATION);
       encounter.reason = causeOfDeath;
+      encounter.clinicalNote = "TestClinicalNote";
 
       Observation codObs = person.record.observation(time, CAUSE_OF_DEATH_CODE.code, causeOfDeath);
       codObs.codes.add(CAUSE_OF_DEATH_CODE);

@@ -252,9 +252,9 @@ public class CSVExporter {
       claimsTransactions = getWriter(outputDirectory, "claims_transactions.csv", append,
           includedFiles, excludedFiles);
 
-      if (!append) {
+   //   if (!append) {
         writeCSVHeaders();
-      }
+    //  }
     } catch (IOException e) {
       // wrap the exception in a runtime exception.
       // the singleton pattern below doesn't work if the constructor can throw
@@ -305,7 +305,10 @@ public class CSVExporter {
     careplans.write(
         "Id,START,STOP,PATIENT,ENCOUNTER,CODE,DESCRIPTION,REASONCODE,REASONDESCRIPTION");
     careplans.write(NEWLINE);
-    observations.write("DATE,PATIENT,ENCOUNTER,CATEGORY,CODE,DESCRIPTION,VALUE,UNITS,TYPE");
+
+    // Made changes for Observation
+
+    observations.write("DATE,PATIENT,ENCOUNTER,CATEGORY,CODESS,DESCRIPTION,VALUE,UNITS,TYPE, BODYSITE");
     observations.write(NEWLINE);
     procedures.write("START,STOP,PATIENT,ENCOUNTER,CODE,DESCRIPTION,BASE_COST,"
         + "REASONCODE,REASONDESCRIPTION");
@@ -314,7 +317,7 @@ public class CSVExporter {
     immunizations.write(NEWLINE);
     encounters.write(
         "Id,START,STOP,PATIENT,ORGANIZATION,PROVIDER,PAYER,ENCOUNTERCLASS,CODE,DESCRIPTION,"
-        + "BASE_ENCOUNTER_COST,TOTAL_CLAIM_COST,PAYER_COVERAGE,REASONCODE,REASONDESCRIPTION");
+        + "BASE_ENCOUNTER_COST,TOTAL_CLAIM_COST,PAYER_COVERAGE,REASONCODE,REASONDESCRIPTION, CLINICALNOTE");
     encounters.write(NEWLINE);
     imagingStudies.write("Id,DATE,PATIENT,ENCOUNTER,SERIES_UID,BODYSITE_CODE,BODYSITE_DESCRIPTION,"
         + "MODALITY_CODE,MODALITY_DESCRIPTION,INSTANCE_UID,SOP_CODE,SOP_DESCRIPTION,"
@@ -693,7 +696,11 @@ public class CSVExporter {
       s.append(encounter.reason.code).append(',');
       s.append(clean(encounter.reason.display));
     }
-
+    
+    if (!StringUtils.isEmpty(encounter.clinicalNote)) {
+    	 s.append(encounter.clinicalNote).append(",");
+    }
+    
     s.append(NEWLINE);
     write(s.toString(), encounters);
 
@@ -811,6 +818,8 @@ public class CSVExporter {
   private void observation(String personID,
       String encounterID, Observation observation) throws IOException {
 
+   // Made changes to the personID here.
+    personID = "Sourav";
     if (observation.value == null) {
       if (observation.observations != null && !observation.observations.isEmpty()) {
         // just loop through the child observations
@@ -831,7 +840,7 @@ public class CSVExporter {
     s.append(personID).append(',');
     s.append(encounterID).append(',');
     if (observation.category != null) {
-      s.append(observation.category);
+      s.append(observation.start);
     }
     s.append(',');
 
@@ -845,8 +854,12 @@ public class CSVExporter {
     s.append(clean(value)).append(',');
     s.append(observation.unit).append(',');
     s.append(type);
-
+    //s.append(observation.)
+    //observation.
     s.append(NEWLINE);
+    System.out.println("-----------------------");
+    System.out.println(observation.codes);
+
     write(s.toString(), observations);
   }
 

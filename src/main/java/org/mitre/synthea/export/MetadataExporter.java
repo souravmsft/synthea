@@ -13,7 +13,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.TimeZone;
 
 import org.mitre.synthea.engine.Generator;
 import org.mitre.synthea.helpers.Config;
@@ -46,16 +45,13 @@ public class MetadataExporter {
     long clinicianSeed = opts.clinicianSeed;
     metadata.put("clinicianSeed", clinicianSeed);
 
-    // reference and end times are expected to be entered on the command line as YYYYMMDD
+    // reference time is expected to be entered on the command line as YYYYMMDD
     // note that Y = "week year" and y = "year" per the formatting guidelines
     // and D = "day in year" and d = "day in month", so what we actually want is yyyyMMdd
     // see: https://docs.oracle.com/javase/7/docs/api/java/text/SimpleDateFormat.html
     SimpleDateFormat yyyymmdd = new SimpleDateFormat("yyyyMMdd");
-    yyyymmdd.setTimeZone(TimeZone.getTimeZone("UTC"));
     String referenceTime = yyyymmdd.format(new Date(generator.referenceTime));
     metadata.put("referenceTime", referenceTime);
-    String endTime = yyyymmdd.format(new Date(generator.stop));
-    metadata.put("endTime", endTime);
 
     // - git commit hash of the current running version
     String version = Utilities.SYNTHEA_VERSION;

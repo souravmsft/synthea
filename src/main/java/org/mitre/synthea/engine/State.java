@@ -994,26 +994,15 @@ public abstract class State implements Cloneable, Serializable {
   }
 
   /**
-   * Class to handle assign_to_attribute, specifically when it is blank, which used to happen a lot
-   * with the default JSON provided by the Module Builder.
-   */
-  private abstract static class AttributeAssignableState extends State {
-    protected String assignToAttribute;
-
-    protected boolean shouldAssignAttribute() {
-      return (assignToAttribute != null && assignToAttribute.length() > 0);
-    }
-  }
-
-  /**
    * OnsetState is a parent class for ConditionOnset and AllergyOnset, where some common logic can
    * be shared. It is an implementation detail and should never be referenced directly in a JSON
    * module.
    */
-  private abstract static class OnsetState extends AttributeAssignableState {
+  private abstract static class OnsetState extends State {
     public boolean diagnosed;
 
     protected List<Code> codes;
+    protected String assignToAttribute;
     protected String targetEncounter;
 
     public OnsetState clone() {
@@ -1029,7 +1018,7 @@ public abstract class State implements Cloneable, Serializable {
       if (targetEncounter == null || targetEncounter.trim().length() == 0
           || (encounter != null && targetEncounter.equals(encounter.name))) {
         diagnose(person, time);
-      } else if (shouldAssignAttribute()) {
+      } else if (assignToAttribute != null && codes != null) {
         // create a temporary coded entry to use for reference in the attribute,
         // which will be replaced if the thing is diagnosed
         HealthRecord.Entry codedEntry = person.record.new Entry(time, codes.get(0).code);
@@ -1072,7 +1061,7 @@ public abstract class State implements Cloneable, Serializable {
       if (codes != null) {
         entry.mergeCodeList(codes);
       }
-      if (shouldAssignAttribute()) {
+      if (assignToAttribute != null) {
         person.attributes.put(assignToAttribute, entry);
       }
 
@@ -1151,7 +1140,7 @@ public abstract class State implements Cloneable, Serializable {
       allergy.allergyType = allergyType;
       allergy.category = category;
 
-      if (shouldAssignAttribute()) {
+      if (assignToAttribute != null) {
         person.attributes.put(assignToAttribute, entry);
       }
 
@@ -1217,10 +1206,11 @@ public abstract class State implements Cloneable, Serializable {
    * 'administration' field allows for the MedicationOrder to also export a
    * MedicationAdministration into the exported FHIR record.
    */
-  public static class MedicationOrder extends AttributeAssignableState {
+  public static class MedicationOrder extends State {
     private List<Code> codes;
     private String reason;
     private JsonObject prescription; // TODO make this a Component
+    private String assignToAttribute;
     private boolean administration;
     private boolean chronic;
 
@@ -1293,7 +1283,7 @@ public abstract class State implements Cloneable, Serializable {
       medication.prescriptionDetails = prescription;
       medication.administration = administration;
 
-      if (shouldAssignAttribute()) {
+      if (assignToAttribute != null) {
         person.attributes.put(assignToAttribute, medication);
       }
       // increment number of prescriptions prescribed by respective hospital
@@ -1357,11 +1347,12 @@ public abstract class State implements Cloneable, Serializable {
    * for more details. One or more codes describes the care plan and a list of activities describes
    * what the care plan entails.
    */
-  public static class CarePlanStart extends AttributeAssignableState {
+  public static class CarePlanStart extends State {
     private List<Code> codes;
     private List<Code> activities;
     private transient List<JsonObject> goals; // TODO: make this a Component
     private String reason;
+    private String assignToAttribute;
 
     @Override
     public CarePlanStart clone() {
@@ -1398,7 +1389,7 @@ public abstract class State implements Cloneable, Serializable {
           }
         }
       }
-      if (shouldAssignAttribute()) {
+      if (assignToAttribute != null) {
         person.attributes.put(assignToAttribute, careplan);
       }
       return true;
@@ -1529,7 +1520,7 @@ public abstract class State implements Cloneable, Serializable {
       int year = Utilities.getYear(time);
       provider.incrementProcedures(year);
 
-      if (assignToAttribute != null && assignToAttribute.length() > 0) {
+      if (assignToAttribute != null) {
         person.attributes.put(assignToAttribute, procedure);
       }
     }
@@ -2019,10 +2010,11 @@ public abstract class State implements Cloneable, Serializable {
    * and should be added separately. A Device may have a manufacturer or model listed
    * for cases where there is generally only one choice.
    */
-  public static class Device extends AttributeAssignableState {
+  public static class Device extends State {
     public Code code;
     public String manufacturer;
     public String model;
+    public String assignToAttribute;
 
     @Override
     public Device clone() {
@@ -2038,7 +2030,7 @@ public abstract class State implements Cloneable, Serializable {
       device.manufacturer = manufacturer;
       device.model = model;
 
-      if (shouldAssignAttribute()) {
+      if (assignToAttribute != null) {
         person.attributes.put(assignToAttribute, device);
       }
 

@@ -14,7 +14,6 @@ import org.mitre.synthea.helpers.Attributes.Inventory;
 import org.mitre.synthea.helpers.Utilities;
 import org.mitre.synthea.world.agents.Person;
 import org.mitre.synthea.world.concepts.ClinicianSpecialty;
-import org.mitre.synthea.world.concepts.HealthRecord;
 import org.mitre.synthea.world.concepts.HealthRecord.Code;
 import org.mitre.synthea.world.concepts.HealthRecord.Encounter;
 import org.mitre.synthea.world.concepts.HealthRecord.EncounterType;
@@ -758,11 +757,7 @@ public final class CardiovascularDiseaseModule extends Module {
 
   private static void prescribeMedication(String med, Person person, long time, boolean chronic) {
     Medication entry = person.record.medicationStart(time, med, chronic);
-    HealthRecord.Code medicationCode = LOOKUP.get(med);
-    if (! entry.containsCode(medicationCode.code, medicationCode.system)) {
-      entry.codes.add(medicationCode);
-    }
-
+    entry.codes.add(LOOKUP.get(med));
     // increment number of prescriptions prescribed
     Encounter encounter = (Encounter) person.attributes.get(CVD_ENCOUNTER);
     if (encounter != null) {
@@ -785,9 +780,7 @@ public final class CardiovascularDiseaseModule extends Module {
           && !person.record.present.containsKey(diagnosis)) {
         Code code = LOOKUP.get(diagnosis);
         Entry conditionEntry = person.record.conditionStart(time, code.display);
-        if (! conditionEntry.containsCode(code.code, code.system)) {
-          conditionEntry.codes.add(code);
-        }
+        conditionEntry.codes.add(code);
       }
     }
 
